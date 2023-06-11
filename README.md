@@ -36,7 +36,7 @@ requested by specifying the ``page`` query param (starts counting from 1).
 $ curl -s my-jisho-api.com/search/たべる | jq
 [
   {
-    "word": "食べる",
+    "writing": "食べる",
     "reading": "食(た)べる",
     "meanings": [
       {
@@ -73,7 +73,7 @@ $ curl -s my-jisho-api.com/search/たべる | jq
 ```
 
 some examples:
-| word     | reading                |
+| writing  | reading                |
 | ----     | -------                |
 | 食べる    | 食(た)べる              |
 | 上げる    | 上(あ)げる              |
