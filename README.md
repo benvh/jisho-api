@@ -63,3 +63,18 @@ $ curl -s my-jisho-api.com/search/たべる | jq
 ]
 
 ```
+
+### Concept reading format
+
+``jisho-api`` makes use of a compact "reading" format that combines both the written kanji and the kana reading that should be used: 
+
+```
+<kanji>(<kana>)*|<kana>*
+```
+
+some examples:
+| word     | reading                |
+| ----     | -------                |
+| 食べる    | 食(た)べる              |
+| 上げる    | 上(あ)げる              |
+| 教科書    | 教(きょう)科(か)書(しょ)  |
