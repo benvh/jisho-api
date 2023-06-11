@@ -2,7 +2,7 @@
 
 Tiny scraper based API app for [jisho.org](https://jisho.org). すげーじゃん？
 
-## configuration 
+## Configuration 
 
 ``jisho-api`` is configured through ENV vars:
 
@@ -20,9 +20,46 @@ JISHO_API_REDIS_PASS   # (default: "") password to use when connecting with the 
 JISHO_API_REDIS_DB     # (default: 0)  db to use. leave blank to use 0 / the default db
 ```
 
-### redis cache
+### Redis cache
 
 ``jisho-api`` can make use of redis to speed up its responses and most importantly stop hammering jisho.org with request it has already made.
 To enable it simply point the ``JISHO_API_REDIS_ADDR`` env var to a valid redis server and ``jisho-api`` will do the rest. Note that if the redis
 server cannot be accessed ``jisho-api`` will crash at launch.
 
+
+## Searching things
+
+Simply make a request to ``<host>/search/<search query>`` in the same way you would search jisho.org. Additional results (if there any) can be
+requested by specifying the ``page`` query param (starts counting from 1).
+
+```bash
+$ curl -s localhost:3000/search/たべる | jq
+[
+  {
+    "word": "食べる",
+    "reading": "食(た)べる",
+    "meanings": [
+      {
+        "value": "to eat",
+        "tags": [
+          "Ichidan verb",
+          "Transitive verb"
+        ]
+      },
+      {
+        "value": "to live on (e.g. a salary); to live off; to subsist on",
+        "tags": [
+          "Ichidan verb",
+          "Transitive verb"
+        ]
+      }
+    ],
+    "tags": [
+      "Common word",
+      "JLPT N5",
+      "Wanikani level 6"
+    ]
+  }
+]
+
+```
