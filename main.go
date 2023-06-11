@@ -26,7 +26,7 @@ type (
 	}
 
 	JishoConcept struct {
-		Word     string                `json:"word"`
+		Writing  string                `json:"writing"`
 		Reading  string                `json:"reading"`
 		Meanings []JishoConceptMeaning `json:"meanings"`
 		Tags     []string              `json:"tags"`
@@ -158,17 +158,17 @@ func SearchJisho(query string, page int, logger zerolog.Logger) []JishoConcept {
 
 	c.OnHTML("div.exact_block > div.concept_light", func(e *colly.HTMLElement) {
 		// create a word + "reading" into a computer friendly format.... <kanji>(<kana reading>)
-		wordEl := e.DOM.Find("div.concept_light-readings > div.concept_light-representation > span.text")
-		word := strings.TrimSpace(wordEl.Text())
+		writingEl := e.DOM.Find("div.concept_light-readings > div.concept_light-representation > span.text")
+		writing := strings.TrimSpace(writingEl.Text())
 
 		reading := ""
 		readingEl := e.DOM.Find("div.concept_light-readings > div.concept_light-representation > span.furigana > span")
 		readingEl.Each(func(i int, s *goquery.Selection) {
 			charReading := s.Text()
 			if len(charReading) > 0 {
-				reading += string([]rune(word)[i]) + "(" + s.Text() + ")"
+				reading += string([]rune(writing)[i]) + "(" + s.Text() + ")"
 			} else {
-				reading += string([]rune(word)[i])
+				reading += string([]rune(writing)[i])
 			}
 		})
 
@@ -203,7 +203,7 @@ func SearchJisho(query string, page int, logger zerolog.Logger) []JishoConcept {
 		// TODO check for the "more words" link (this means there's another page available)
 
 		scrapedConcept := JishoConcept{
-			Word:     word,
+			Writing:  writing,
 			Reading:  reading,
 			Meanings: meanings,
 			Tags:     tags,
