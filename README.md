@@ -33,7 +33,7 @@ Simply make a request to ``<host>/search/<search query>`` in the same way you wo
 requested by specifying the ``page`` query param (starts counting from 1).
 
 ```bash
-$ curl -s localhost:3000/search/たべる | jq
+$ curl -s my-jisho-api.com/search/たべる | jq
 [
   {
     "word": "食べる",
