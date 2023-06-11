@@ -172,26 +172,35 @@ func SearchJisho(query string, page int, logger zerolog.Logger) []JishoConcept {
 			}
 		})
 
-		// collect entry meanings
+		// collect entry meanings (note that meaning tags and actual meaning elements are siblings in the same parent node)
 		meanings := make([]JishoConceptMeaning, 0)
 		meaningsContentEl := e.DOM.Find("div.concept_light-meanings > div.meanings-wrapper")
-		meaningsContentEl.Find("div.meaning-definition").Each(func(i int, ee *goquery.Selection) {
-			meaningTagsEl := meaningsContentEl.Find(fmt.Sprintf("div.meaning-tags:nth-child(1n+%d)", i+1)).First()
-			meaning := ee.Find("span.meaning-meaning").Text()
-			meaningTags := strings.Split(meaningTagsEl.Text(), ",")
+		meaningsTagsEls := meaningsContentEl.Find("div.meaning-tags")
 
-			meanings = append(meanings, JishoConceptMeaning{
-				Value: meaning,
-				Tags:  meaningTags,
-			})
+		meaningsContentEl.Find("div.meaning-definition").Each(func(i int, ee *goquery.Selection) {
+			meaningTagsEl := meaningsTagsEls.Get(i)
+			meaningTagsElText := meaningTagsEl.FirstChild.Data // this is a text node...
+
+			// ignore any meaning entry that has "Other forms" or "Notes" as tags. These "special" elements have
+			// the same structure as the other meaning elements but don't actually define a meaning.
+			if !strings.Contains(meaningTagsElText, "Other forms") && !strings.Contains(meaningTagsElText, "Notes") {
+				meaningTags := strings.Split(meaningTagsElText, ", ")
+				meaning := ee.Find("span.meaning-meaning").Text()
+				meanings = append(meanings, JishoConceptMeaning{
+					Value: meaning,
+					Tags:  meaningTags,
+				})
+			}
 		})
 
 		// collect entry tags
 		tags := make([]string, 0)
 		tagsEl := e.DOM.Find("div.concept_light-status")
 		tagsEl.Find("span.concept_light-tag").Each(func(i int, ee *goquery.Selection) {
-			tags = append(tags, ee.Text())
+			tags = append(tags, strings.TrimSpace(ee.Text()))
 		})
+
+		// TODO check for the "more words" link (this means there's another page available)
 
 		scrapedConcept := JishoConcept{
 			Word:     word,
