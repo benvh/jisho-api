@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -156,7 +157,7 @@ func SearchJisho(query string, page int, logger zerolog.Logger) []JishoConcept {
 		colly.UserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"),
 	)
 
-	c.OnHTML("div.exact_block > div.concept_light", func(e *colly.HTMLElement) {
+	c.OnHTML("div.concept_light", func(e *colly.HTMLElement) {
 		// create a word + "reading" into a computer friendly format.... <kanji>(<kana reading>)
 		writingEl := e.DOM.Find("div.concept_light-readings > div.concept_light-representation > span.text")
 		writing := strings.TrimSpace(writingEl.Text())
@@ -212,7 +213,9 @@ func SearchJisho(query string, page int, logger zerolog.Logger) []JishoConcept {
 		concepts = append(concepts, scrapedConcept)
 	})
 
-	err := c.Visit(fmt.Sprintf("https://jisho.org/search/%s?page=%d", query, page))
+	jishoUrl := fmt.Sprintf("https://jisho.org/search/%s?page=%d", url.QueryEscape(query), page)
+	logger.Debug().Msgf("scraping jisho page %s", jishoUrl)
+	err := c.Visit(jishoUrl)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("error occurred while trying to scrape jisho.org")
 	}
