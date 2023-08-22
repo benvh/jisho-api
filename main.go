@@ -173,24 +173,52 @@ func SearchJisho(query string, page int, logger zerolog.Logger) []JishoConcept {
 			}
 		})
 
+		logger.Debug().Msgf("getting meanings for `%s`", reading)
+
 		// collect entry meanings (note that meaning tags and actual meaning elements are siblings in the same parent node)
 		meanings := make([]JishoConceptMeaning, 0)
 		meaningsContentEl := e.DOM.Find("div.concept_light-meanings > div.meanings-wrapper")
-		meaningsTagsEls := meaningsContentEl.Find("div.meaning-tags")
 
-		meaningsContentEl.Find("div.meaning-definition").Each(func(i int, ee *goquery.Selection) {
-			meaningTagsEl := meaningsTagsEls.Get(i)
-			meaningTagsElText := meaningTagsEl.FirstChild.Data // this is a text node...
+		meaningsContentEl.Find("div.meaning-wrapper").Each(func(i int, ee *goquery.Selection) {
+			if len(ee.Prev().Nodes) > 0 {
+				meaningTagsEl := ee.Prev().Get(0)
+				shouldReadMeaningTagsEl := true
 
-			// ignore any meaning entry that has "Other forms" or "Notes" as tags. These "special" elements have
-			// the same structure as the other meaning elements but don't actually define a meaning.
-			if !strings.Contains(meaningTagsElText, "Other forms") && !strings.Contains(meaningTagsElText, "Notes") {
-				meaningTags := strings.Split(meaningTagsElText, ", ")
-				meaning := ee.Find("span.meaning-meaning").Text()
-				meanings = append(meanings, JishoConceptMeaning{
-					Value: meaning,
-					Tags:  meaningTags,
-				})
+				// check the class Attr of the sibling. If it's not a meaning-tags element, skip it
+				for _, attr := range meaningTagsEl.Attr {
+					if attr.Key != "class" {
+						continue
+					}
+
+					if !strings.Contains(attr.Val, "meaning-tags") {
+						shouldReadMeaningTagsEl = false
+						break
+					} else {
+						break
+					}
+				}
+
+				// sometimes meanings don't have any "meaning tags" at all (we check this above). If that's the
+				// case just as an empty string instead...
+				meaningTagsElText := ""
+				if shouldReadMeaningTagsEl {
+					meaningTagsElText = meaningTagsEl.FirstChild.Data // this is a text node...
+				}
+
+				// ignore any meaning entry that has "Other forms" or "Notes" as tags. These "special" elements have
+				// the same structure as the other meaning elements but don't actually define a meaning.
+				if !strings.Contains(meaningTagsElText, "Other forms") && !strings.Contains(meaningTagsElText, "Notes") {
+					// take into account the possibilty of there not being any meaning tags here as well
+					meaningTags := []string{}
+					if shouldReadMeaningTagsEl {
+						meaningTags = strings.Split(meaningTagsElText, ", ")
+					}
+					meaning := ee.Find("span.meaning-meaning").Text()
+					meanings = append(meanings, JishoConceptMeaning{
+						Value: meaning,
+						Tags:  meaningTags,
+					})
+				}
 			}
 		})
 
